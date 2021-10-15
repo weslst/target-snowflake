@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+import cryptography.hazmat
 
 import singer
 from snowflake.connector import DictCursor, SnowflakeConnection
@@ -40,6 +41,17 @@ class Connection(SnowflakeConnection):
         self.configured_warehouse = kwargs.get('warehouse')
         self.configured_database = kwargs.get('database')
         self.configured_schema = kwargs.get('schema')
+
+        if kwargs.get("private_key"):
+            kwargs["private_key"] = cryptography.hazmat.primitives.serialization.load_pem_private_key(
+                kwargs["private_key"].replace("\\n","\n").encode(), 
+                password=kwargs["password"].encode(), 
+                backend=cryptography.hazmat.backends.default_backend()
+            ).private_bytes(
+                encoding=cryptography.hazmat.primitives.serialization.Encoding.DER,
+                format=cryptography.hazmat.primitives.serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=cryptography.hazmat.primitives.serialization.NoEncryption()
+            )
 
         SnowflakeConnection.__init__(self, **kwargs)
 
