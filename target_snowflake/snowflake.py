@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import logging
+import datetime
 import os
 import re
 import uuid
@@ -70,7 +71,7 @@ class SnowflakeTarget(SQLInterface):
             '''.format(
                 sql.identifier(self.connection.configured_database),
                 sql.identifier(self.connection.configured_schema)))
-        
+
         cur.execute(
             '''
             SHOW TABLES IN SCHEMA {}.{}
@@ -444,7 +445,12 @@ class SnowflakeTarget(SQLInterface):
 
         if self.s3:
             bucket, key = self.s3.persist(csv_rows,
-                                          key_prefix=temp_table_name + SEPARATOR)
+                                          key_prefix="{schema}/{table}/{date}/{temp}".format(
+                                            schema=self.connection.configured_schema.lower(),
+                                            table=remote_schema['name'].lower(),
+                                            date=datetime.datetime.now().strftime("%Y-%m-%dT%H:%M"),
+                                            temp=temp_table_name + SEPARATOR))
+
             stage_location = "'s3://{bucket}/{key}' credentials=(AWS_KEY_ID=%s AWS_SECRET_KEY=%s)".format(
                 bucket=bucket,
                 key=key)
@@ -622,7 +628,7 @@ class SnowflakeTarget(SQLInterface):
 
         if not tables:
             return None
-        
+
         if len(tables) != 1:
             raise SnowflakeError(
                 '{} tables returned while searching for: {}.{}.{}'.format(
