@@ -66,6 +66,13 @@ class SnowflakeTarget(SQLInterface):
 
         cur.execute(
             '''
+            CREATE SCHEMA IF NOT EXISTS {}.{}
+            '''.format(
+                sql.identifier(self.connection.configured_database),
+                sql.identifier(self.connection.configured_schema)))
+        
+        cur.execute(
+            '''
             SHOW TABLES IN SCHEMA {}.{}
             '''.format(
                 sql.identifier(self.connection.configured_database),
