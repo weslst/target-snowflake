@@ -28,6 +28,7 @@ def main(config, input_stream=None):
             warehouse=config.get('snowflake_warehouse'),
             database=config.get('snowflake_database'),
             schema=config.get('snowflake_schema', 'PUBLIC'),
+            session_parameters=config.get('snowflake_session_parameters'),
             autocommit=False
     ) as connection:
         s3_config = config.get('target_s3')
